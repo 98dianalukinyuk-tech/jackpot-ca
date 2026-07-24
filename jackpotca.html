@@ -1,19 +1,22 @@
-<title>Jackpot City</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bonus Wheel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
-  const cut = 1;
   const adjustCfc = 0.42;
   const CONFIG = (() => {
     const params = new URLSearchParams(window.location.search);
 
     const DEFAULTS = {
-      lang: "nl",
-      brand: "betcity",
-      offerBase: "https://glhh7.com/tf7gtp9d",
+      lang: "en",
+      brand: "",
+      offerBase: "https://srhh7.com/L7vbhfNc",
       i18nUrl: "https://alphaclick.click/system/i18n.json?v=1",
-      sendTo: "AW-18067886785/fO-pCJyiutQcEKC5jpVD",
-      b1: "Bonus €2,000",
-      b2: "200 GS"
+      sendTo: "AW-18067886785/1rR3CK2dv9QcEMGluKdD",
+      b1: "BONUS $500",
+      b2: "BONUS $250"
     };
 
     const LANDING_CONFIG_PARAMS = new Set([
@@ -92,8 +95,8 @@
       return result;
     }
 
-    const lang = getParam("lang", DEFAULTS.lang);
-    const brand = getParam("brand", DEFAULTS.brand);
+    const lang = DEFAULTS.lang;
+    const brand = DEFAULTS.brand;
     const offerBase = getParam("offer", DEFAULTS.offerBase);
     const sendTo = getTrackingParam(DEFAULTS.sendTo);
     const trackingTargets = parseTrackingTargets(sendTo);
@@ -131,9 +134,10 @@
         second: bonus2,
       },
       assets: {
-        bg: `https://alphaclick.click/brands/${brand}/bg.avif`,
+        bg: brand
+          ? `https://alphaclick.click/brands/${brand}/bg.avif`
+          : "https://alphaclick.click/brands/default/bg.avif",
         bgFallback: "https://alphaclick.click/brands/default/bg.avif",
-        logo: `https://alphaclick.click/brands/${brand}/logo.png`,
         holder: "https://alphaclick.click/wheel/steel-wheel-holder.avif",
         trigger: "https://alphaclick.click/wheel/trigger.avif",
         frame: "https://alphaclick.click/wheel/wheel-win-frame.avif",
@@ -144,9 +148,19 @@
   })();
 
   async function loadI18n() {
-    const res = await fetch(CONFIG.i18nUrl, { cache: "force-cache" });
-    const allMessages = await res.json();
-    return allMessages[CONFIG.lang] || allMessages.en || allMessages.de;
+    return {
+      spin_button: "SPIN",
+      wheel_plus_spins: "SPINS",
+      wheel_retry: "TRY AGAIN",
+      wheel_empty: "NO BONUS",
+      main_title: "SPIN AND WIN!",
+      attempts_label: "Your spins:",
+      popup_title: "CONGRATULATIONS!",
+      popup_retry_button: "TRY AGAIN",
+      popup_claim_button: "CLAIM BONUS",
+      popup_win_prefix: "YOU WON:",
+      meta_title: "Bonus Wheel",
+    };
   }
 
   function getTextFitTargets(element) {
@@ -240,6 +254,10 @@
   }
 
   async function resolveBackgroundUrl() {
+    if (!CONFIG.brand) {
+      return CONFIG.assets.bgFallback;
+    }
+
     try {
       await preloadImage(CONFIG.assets.bg);
       return CONFIG.assets.bg;
@@ -250,7 +268,6 @@
 
   async function applyAssets() {
     const section = document.querySelector("section.body");
-    const logo = document.querySelector(".logo img");
     const wheel = document.querySelector(".wheel");
     const start = document.querySelector(".start");
     const frameImg = document.querySelector(".frame img");
@@ -258,10 +275,6 @@
     if (section) {
       const bgUrl = await resolveBackgroundUrl();
       section.style.background = `url("${bgUrl}") no-repeat top left / cover`;
-    }
-
-    if (logo) {
-      logo.src = CONFIG.assets.logo;
     }
 
     if (wheel) {
@@ -291,11 +304,9 @@
     const startBtnText = document.querySelector(".start p");
     const offerTitle = document.querySelector(".offer h1");
     const offerText = document.querySelector(".offer p");
-    const firstPopupTitle = document.querySelector("#first-popup .popup-title");
     const secondPopupTitle = document.querySelector(
       "#second-popup .popup-title",
     );
-    const retryBtn = document.querySelector("#secsp");
     const claimBtn = document.querySelector(
       "#d25c38c9-c12e-670a-4afb-5b9f8d6045ee",
     );
@@ -322,12 +333,10 @@
 
     if (offerTitle) offerTitle.textContent = t.main_title;
     if (offerText) {
-      offerText.innerHTML = `${t.attempts_label} <span id="counter">2</span>`;
+      offerText.innerHTML = `${t.attempts_label} <span id="counter">1</span>`;
     }
 
-    if (firstPopupTitle) firstPopupTitle.textContent = t.popup_title;
     if (secondPopupTitle) secondPopupTitle.textContent = t.popup_title;
-    if (retryBtn) retryBtn.textContent = t.popup_retry_button;
     if (claimBtn) claimBtn.textContent = t.popup_claim_button;
 
     document.title = t.meta_title || document.title;
@@ -368,16 +377,10 @@
       wheelSegs[6].querySelector(".wheel-small-text").textContent = b2.bottom;
     }
 
-    const cutedBonus = bonus1Text.split(" ").slice(cut).join(" ");
-    setPopupText(
-      "#first-popup .popup-text",
-      t.popup_win_prefix + " ",
-      cutedBonus,
-    );
     setPopupText(
       "#second-popup .popup-text",
-      [t.popup_win_prefix, cutedBonus].filter(Boolean).join(" "),
-      bonus2Text ? `+ ${bonus2Text}` : "",
+      t.popup_win_prefix,
+      bonus1Text,
     );
   }
 
@@ -585,11 +588,6 @@
     animation-fill-mode: forwards;
   }
 
-  .second-spin {
-    animation: 5s secondSpin ease;
-    animation-fill-mode: forwards;
-  }
-
   @keyframes firstSpin {
     from {
       transform: rotate(0deg);
@@ -597,16 +595,6 @@
 
     to {
       transform: rotate(1350deg);
-    }
-  }
-
-  @keyframes secondSpin {
-    from {
-      transform: rotate(1350deg);
-    }
-
-    to {
-      transform: rotate(2970deg);
     }
   }
 
@@ -660,6 +648,8 @@
     padding: 0 !important;
   }
 </style>
+</head>
+<body>
 <section class="body embeded-body" style="
     width: 100%;
     height: 100%;
@@ -669,51 +659,25 @@
     justify-content: center;
     overflow: hidden;
   ">
-  <header style="
+  <style>
+    .wheel-text-wrapper {
+      width: 100%;
+      height: 100%;
+      padding-top: 5%;
       display: flex;
       align-items: center;
-      justify-content: center;
-      position: fixed;
-      z-index: 10;
-      width: 100%;
-      left: 0;
-      top: 0;
-    ">
-    <div class="logo">
-      <style>
-        .logo {
-          padding: 20px 0 0 0;
-          width: 33.75%;
-          max-width: 324px;
-          height: 229.5px;
+      flex-direction: column;
+    }
 
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-        }
+    .wheel-text-wrapper p {
+      width: fit-content;
+      text-transform: uppercase;
+    }
 
-        .wheel-text-wrapper {
-          width: 100%;
-          height: 100%;
-          padding-top: 5%;
-          display: flex;
-          align-items: center;
-          flex-direction: column;
-
-          p {
-            width: fit-content;
-            text-transform: uppercase;
-          }
-
-          p:not(last-child) {
-            margin-bottom: 6px;
-          }
-        }
-      </style><img src="https://alphaclick.click/system/loader.svg" alt="logo" />
-    </div>
-  </header>
+    .wheel-text-wrapper p:not(:last-child) {
+      margin-bottom: 6px;
+    }
+  </style>
   <div class="main" style="
       position: relative;
       z-index: 10;
@@ -757,24 +721,24 @@
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-empty-text wheel-text" style="color: #7ccc33 !important; margin: 0 0 6px 0 !important">
-              Nochmal
+              TRY AGAIN
             </p>
           </div>
         </div>
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-big-text wheel-text" style="color: #fbd84d !important; margin: 0 0 6px 0 !important">
-              300
+              BONUS
             </p>
             <p class="wheel-small-text wheel-text" style="color: #fff !important; margin: 0 !important">
-              FS
+              $500
             </p>
           </div>
         </div>
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-empty-text wheel-text" style="color: #7ccc33 !important; margin: 0 !important">
-              Leer
+              NO BONUS
             </p>
           </div>
         </div>
@@ -791,24 +755,24 @@
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-empty-text wheel-text" style="color: #7ccc33 !important; margin: 0 !important">
-              Nochmal
+              TRY AGAIN
             </p>
           </div>
         </div>
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-big-text wheel-text" style="color: #fbd84d !important; margin: 0 0 6px 0 !important">
-              BIS ZU
+              BONUS
             </p>
             <p class="wheel-small-text wheel-text" style="color: #fff !important; margin: 0 !important">
-              3.000€
+              $250
             </p>
           </div>
         </div>
         <div class="wheel-seg">
           <div class="wheel-text-wrapper adopt">
             <p class="wheel-empty-text wheel-text" style="color: #7ccc33 !important; margin: 0 !important">
-              Leer
+              NO BONUS
             </p>
           </div>
         </div>
@@ -897,7 +861,7 @@
           justify-content: center;
           text-transform: uppercase;
         ">
-        <p style="width: fit-content; padding: 0; margin:0; color: #612901;">Drehen</p>
+        <p style="width: fit-content; padding: 0; margin:0; color: #612901;">SPIN</p>
       </button>
       <div class="frame">
         <img src="https://alphaclick.click/wheel/wheel-win-frame.avif" alt="" />
@@ -1010,29 +974,11 @@
         margin: 0 0 10px 0;
         font-size: 30px;
       ">
-      Drehe und gewinne!
+      SPIN AND WIN!
     </h1>
     <p style="color: #fff !important; text-align: center; font-size: 22px">
-      Ihre Versuche: <span id="counter">2</span>
+      Your spins: <span id="counter">1</span>
     </p>
-  </div>
-  <div id="first-popup" class="popup">
-    <div class="popup-body">
-      <h2 class="popup-title" style="
-          color: #fbd84d !important;
-          text-align: center;
-          margin-bottom: 9px;
-          font-size: 30px;
-          margin-bottom: 20px;
-        ">
-        Dein Gewinn:
-      </h2>
-      <p class="popup-text">
-        <span class="popup-text-prefix"></span>
-        <span class="popup-text-value">300 FS</span>
-      </p>
-      <a href="#" id="secsp" class="popup-btn adopt">Nochmal</a>
-    </div>
   </div>
   <div id="second-popup" class="popup">
     <div class="popup-body">
@@ -1043,13 +989,13 @@
           font-size: 30px;
           margin-bottom: 20px;
         ">
-        Glückwunsch!
+        CONGRATULATIONS!
       </h2>
       <p class="popup-text">
-        <span class="popup-text-prefix">Dein Gewinn: 300 FS</span>
-        <span class="popup-text-value">+ BIS ZU 3.000€</span>
+        <span class="popup-text-prefix">YOU WON:</span>
+        <span class="popup-text-value">BONUS $500</span>
       </p>
-      <a href="#" id="d25c38c9-c12e-670a-4afb-5b9f8d6045ee" class="popup-btn adopt">Bonus abholen</a>
+      <a href="#" id="d25c38c9-c12e-670a-4afb-5b9f8d6045ee" class="popup-btn adopt">CLAIM BONUS</a>
       <script>
         document
           .querySelector("#d25c38c9-c12e-670a-4afb-5b9f8d6045ee")
@@ -1081,40 +1027,6 @@
     }
 
     @media (max-width: 767px) {
-      .body > header {
-        position: absolute !important;
-        left: 0 !important;
-        width: 100% !important;
-      }
-
-      .logo {
-        transform: translateY(-30px) !important;
-      }
-
-      #first-popup.popup,
-      #second-popup.popup {
-        position: fixed !important;
-        inset: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        margin: 0 !important;
-        transform: none !important;
-      }
-
-      #first-popup .popup-body,
-      #second-popup .popup-body {
-        position: fixed !important;
-        left: 50vw !important;
-        top: 50vh !important;
-        top: 50dvh !important;
-        width: min(90vw, 600px) !important;
-        max-height: calc(100dvh - 32px);
-        margin: 0 !important;
-        overflow-y: auto;
-        transform: translate(-50%, -50%) !important;
-      }
-
       .main {
         top: -2vh !important;
         transform: none !important;
@@ -1141,11 +1053,10 @@
   <script>
     const startBtn = document.querySelector(".start");
     const wheelBody = document.querySelector(".wheel-body");
-    const firstPopup = document.querySelector("#first-popup");
     const secondPopup = document.querySelector("#second-popup");
-    const secsp = document.querySelector("#secsp");
     let counter = document.querySelector("#counter");
-    const storageKey = `wheel-state:${CONFIG.lang}:${CONFIG.brand}`;
+    let isSpinning = false;
+    const storageKey = `wheel-state:${CONFIG.lang}:${CONFIG.offerBase}`;
 
     function readSavedState() {
       try {
@@ -1164,8 +1075,7 @@
           storageKey,
           JSON.stringify({
             finished: true,
-            bonus1: CONFIG.bonuses.first,
-            bonus2: CONFIG.bonuses.second,
+            bonus: CONFIG.bonuses.first,
             popupPrefix: prefixNode ? prefixNode.textContent : "",
             popupValue: valueNode ? valueNode.textContent : "",
           }),
@@ -1193,9 +1103,8 @@
       if (!state?.finished) return;
 
       applySavedPopupText(state);
-      wheelBody.classList.remove("animate", "first-spin");
-      wheelBody.classList.add("second-spin");
-      firstPopup.classList.remove("active-popup");
+      wheelBody.classList.remove("animate");
+      wheelBody.classList.add("first-spin");
       secondPopup.classList.add("active-popup");
       if (counter) counter.innerHTML = "0";
       fitTexts().catch(() => { });
@@ -1210,18 +1119,12 @@
         showSavedWinState();
         return;
       }
+      if (isSpinning) return;
 
+      isSpinning = true;
+      startBtn.disabled = true;
       wheelBody.classList.remove("animate");
       wheelBody.classList.add("first-spin");
-      if (counter) counter.innerHTML = "1";
-      setTimeout(function () {
-        firstPopup.classList.add("active-popup");
-      }, 6000);
-    });
-    secsp.addEventListener("click", function (e) {
-      e.preventDefault();
-      firstPopup.classList.remove("active-popup");
-      wheelBody.classList.add("second-spin");
       if (counter) counter.innerHTML = "0";
       setTimeout(function () {
         saveFinishedState();
@@ -1232,8 +1135,8 @@
 
 </section>
 
-
-
+</body>
+</html>
 
 
 
@@ -1241,196 +1144,348 @@
 <html lang="en-CA">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Jackpot City Casino Hotel Canada</title>
-
-
-
-    <meta name="description"
-        content="Jackpot City casino hotel in Vancouver with gaming halls, rooms, dining, VIP and sample prices.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Physical pokerroom guide | Jackpot City</title>
+  <meta name="description"
+    content="Plan an in-person pokerroom visit, physical tournament attendance and venue broadcasts in Canada.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Physical pokerroom guide | Jackpot City">
+  <meta property="og:description"
+    content="Plan an in-person pokerroom visit, physical tournament attendance and venue broadcasts in Canada.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/logos/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
 </head>
 
-<body>
-    <div class="shell">
-        <aside class="rail"><a class="brand" href="index.html">Jackpot City</a>
-            <nav class="nav"><a href="index.html">Home</a><a href="hotel.html">Hotel</a><a
-                    href="casino-floor.html">Casino</a><a href="gaming-halls.html">Gaming Halls</a><a
-                    href="games.html">Games</a><a href="venue.html">Venue</a><a href="packages.html">Prices</a><a
-                    href="contact.html">Contact</a></nav>
-        </aside>
-        <main>
-            <section class="hero">
-                <div class="hero-copy"><span class="eyebrow">Onrender · Vancouver casino hotel</span>
-                    <h1>Jackpot City Casino Hotel Canada</h1>
-                    <p class="lead">Jackpot City is shaped as a bright harbour casino hotel where the lobby opens into
-                        the gaming floor, with mountain views, a coffee bar, table games and calm guest routing. The
-                        whole stay is readable from the first step: hotel, dining, casino floor, break points and rooms.
-                    </p>
-                    <div class="actions"><a class="btn" href="casino-floor.html">Explore casino</a><a class="btn alt"
-                            href="packages.html">View prices</a></div>
-                </div>
-                <div class="hero-media"></div>
-            </section>
-            <section class="section">
-                <div class="wrap head">
-                    <div><span class="eyebrow">Hotel casino</span>
-                        <h2>Jackpot City keeps the casino inside the hotel experience</h2>
-                    </div>
-                    <p>The venue is planned as one connected stay. Guests move from lobby to restaurant, then into
-                        gaming halls, bar, lounge, wellness and rooms without leaving the building. Adult-only
-                        information, breaks and responsible gaming points remain visible.</p>
-                </div>
-                <div class="wrap mapline">
-                    <article class='tile'><b>01</b>
-                        <h3>Arrival</h3>
-                        <p>Check-in in Vancouver, ID guidance, luggage support and a simple map of the hotel casino.</p>
-                    </article>
-                    <article class='tile'><b>02</b>
-                        <h3>Dining</h3>
-                        <p>A relaxed restaurant, coffee bar, wine list and pre-game lounge seating.</p>
-                    </article>
-                    <article class='tile'><b>03</b>
-                        <h3>Casino Floor</h3>
-                        <p>Roulette, blackjack, baccarat, poker, slots and live game bar inside the hotel.</p>
-                    </article>
-                    <article class='tile'><b>04</b>
-                        <h3>Pause</h3>
-                        <p>Quiet seating, non-alcoholic options, water points and responsible gaming information.</p>
-                    </article>
-                    <article class='tile'><b>05</b>
-                        <h3>Suite</h3>
-                        <p>Short route back to rooms, spa appointments and late check-out on request.</p>
-                    </article>
-                </div>
-            </section>
-            <section class="section band">
-                <div class="wrap casino-feature">
-                    <div><span class="eyebrow">Casino floor</span>
-                        <h2>Jackpot City gaming floor, halls and service points</h2>
-                        <p>The casino floor is divided into table games, slots, poker, baccarat, live game bar and VIP
-                            salon. Each area has its own sound level, seating pattern, host point and pause route. The
-                            design avoids a single crowded room and instead makes the hotel casino easier to understand.
-                        </p>
-                        <div class="actions"><a class="btn" href="games.html">Games</a><a class="btn alt"
-                                href="vip.html">VIP service</a></div>
-                    </div><img class="media" src="hero.jpg" alt="Jackpot City casino hotel Vancouver">
-                </div>
-            </section>
-            <section class="section">
-                <div class="wrap"><span class="eyebrow">Gaming halls</span>
-                    <h2>Jackpot City games and rooms</h2>
-                    <div class="games">
-                        <article class='zone'>
-                            <h3>Roulette Pavilion</h3>
-                            <p>Open roulette tables near the central bar with visible limits, comfortable seating and a
-                                host available for game flow questions.</p>
-                        </article>
-                        <article class='zone'>
-                            <h3>Blackjack Room</h3>
-                            <p>A calmer blackjack area with clear table spacing, soft lighting and service that keeps
-                                spectators away from active seats.</p>
-                        </article>
-                        <article class='zone'>
-                            <h3>Baccarat Salon</h3>
-                            <p>A quieter salon for baccarat requests, private hosting, low noise and direct access to
-                                lounge seating.</p>
-                        </article>
-                        <article class='zone'>
-                            <h3>Poker Studio</h3>
-                            <p>A separate poker room for private requests, small tournament concepts, waiting seats and
-                                host notifications.</p>
-                        </article>
-                        <article class='zone'>
-                            <h3>Slot Gallery</h3>
-                            <p>A bright slot lounge with wide aisles, individual chairs, service points and pauses built
-                                into the room plan.</p>
-                        </article>
-                        <article class='zone'>
-                            <h3>Live Game Bar</h3>
-                            <p>A bar-facing game area where guests can watch live tables, order small plates and take
-                                breaks without leaving the venue.</p>
-                        </article>
-                    </div>
-                </div>
-            </section>
-            <section class="section band">
-                <div class="wrap"><span class="eyebrow">Sample prices</span>
-                    <h2>Jackpot City hotel packages</h2>
-                    <div class="grid4">
-                        <article class='tile'>
-                            <h3>Harbour Room</h3>
-                            <div class='price'>from C$245</div>
-                            <p>Overnight stay, breakfast option, Wi-Fi, concierge and access to dining areas.</p>
-                        </article>
-                        <article class='tile'>
-                            <h3>Casino Stay</h3>
-                            <div class='price'>from C$335</div>
-                            <p>Room, dinner credit, lounge booking and casino host introduction.</p>
-                        </article>
-                        <article class='tile'>
-                            <h3>Suite Route</h3>
-                            <div class='price'>from C$540</div>
-                            <p>Suite, wellness time, priority dining and private table request support.</p>
-                        </article>
-                        <article class='tile'>
-                            <h3>VIP Weekend</h3>
-                            <div class='price'>from C$980</div>
-                            <p>Host service, suite planning, dinner pairing, quiet lounge and late check-out request.
-                            </p>
-                        </article>
-                    </div>
-                </div>
-            </section>
-            <footer>
-                <div class="wrap footgrid">
-                    <div><strong>Jackpot City</strong>
-                        <p>1055 Canada Place, Vancouver, BC V6C 0C3,
-                            Canada<br>reservations@jackpotcityhotel-vancouver.ca<br>+1 604 555 0186</p>
-                    </div>
-                    <div>
-                        <p>Jackpot City is presented as a Canadian casino hotel concept in Vancouver with rooms, dining,
-                            wellness, gaming halls, VIP service and responsible gaming information.</p>
-                        <div class="legal-links"><a href="privacy-policy.html">Privacy Policy</a><a
-                                href="cookie-policy.html">Cookie Policy</a><a href="terms.html">Terms</a></div>
-                    </div>
-                </div>
-            </footer>
-        </main>
+<body class="theme-city">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="independent-bar">Independent Canadian visitor information · not operated by or affiliated with Jackpot
+    City</div>
+  <header class="site-header" data-header>
+    <a class="brand" href="index.html"><img src="assets/logos/logo-dark.svg"
+        alt="Jackpot City physical pokerroom guide"></a>
+    <nav class="desktop-nav" aria-label="Primary navigation"><a href="index.html" class="active">Home</a><a
+        href="pokerroom.html" class="">Pokerroom</a><a href="tournaments.html" class="">Tournaments</a><a
+        href="schedule.html" class="">Schedule</a><a href="live.html" class="">Live</a><a href="results.html"
+        class="">Results</a><a href="visit.html" class="">Visit</a><a href="rules.html" class="">Rules</a><a
+        href="contact.html" class="">Contact</a></nav>
+    <a class="header-cta" href="tournaments.html">View physical events</a>
+    <button class="menu-toggle" type="button" aria-expanded="false"
+      aria-controls="mobile-menu"><span></span><span></span><span></span><span class="sr-only">Open menu</span></button>
+  </header>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <div class="mobile-menu-head"><img src="assets/logos/logo-dark.svg" alt=""><button class="menu-close" type="button"
+        aria-label="Close menu">×</button></div>
+    <nav aria-label="Mobile navigation"><a href="index.html">Home</a><a href="pokerroom.html">Pokerroom</a><a
+        href="tournaments.html">Tournaments</a><a href="schedule.html">Schedule</a><a href="live.html">Live</a><a
+        href="results.html">Results</a><a href="visit.html">Visit</a><a href="rules.html">Rules</a><a
+        href="contact.html">Contact</a></nav>
+    <a class="button primary" href="tournaments.html">View physical events</a>
+  </div>
+  <main id="main">
+    <section class="page-hero city">
+      <picture>
+        <source media="(max-width: 700px)" srcset="assets/images/home-hero-800.webp"><img class="hero-image"
+          src="assets/images/home-hero-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+          alt="Physical poker, framed by the city">
+      </picture>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="eyebrow">CANADA · PHYSICAL POKERROOM GUIDE</p>
+        <h1>Physical poker, framed by the city</h1>
+        <p>Jackpot City is an independent planning guide for physical pokerrooms and in-person tournament visits in
+          Canada. It does not provide online poker, gaming accounts, deposits, or remote participation.</p>
+        <div class="hero-actions"><a class="button primary" href="tournaments.html">View physical events</a><a
+            class="button glass" href="visit.html">Plan your visit</a></div>
+      </div>
+    </section>
+    <section class="section quick-section">
+      <div class="quick-grid"><a class="quick-card" href="visit.html"><img src="assets/icons/clock.svg"
+            alt=""><span><strong>Opening hours</strong><small>Shown only after venue verification</small></span></a><a
+          class="quick-card" href="visit.html"><img src="assets/icons/route.svg"
+            alt=""><span><strong>Route</strong><small>Transport and accessible arrival planning</small></span></a><a
+          class="quick-card" href="schedule.html"><img src="assets/icons/calendar.svg" alt=""><span><strong>Tournament
+              calendar</strong><small>Confirmed physical events only</small></span></a><a class="quick-card"
+          href="pokerroom.html"><img src="assets/icons/table.svg" alt=""><span><strong>Pokerroom</strong><small>Real
+              tables in a physical venue</small></span></a><a class="quick-card" href="live.html"><img
+            src="assets/icons/camera.svg" alt=""><span><strong>Venue broadcast</strong><small>Coverage from an in-person
+              tournament</small></span></a><a class="quick-card" href="rules.html"><img src="assets/icons/id.svg"
+            alt=""><span><strong>Visitor rules</strong><small>Identification and provincial age rules</small></span></a>
+      </div>
+    </section>
+    <section class="section split-intro">
+      <div>
+        <picture>
+          <source media="(max-width: 700px)" srcset="assets/images/home-intro-800.webp"><img class=""
+            src="assets/images/home-intro-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+            alt="Physical pokerroom interior and visitor area">
+        </picture>
+      </div>
+      <div>
+        <p class="eyebrow">ABOUT THE GUIDE</p>
+        <h2>A sharper way to plan a city poker night</h2>
+        <p>This guide organises practical information around physical attendance: venue access, tournament rules, table
+          etiquette, lounge planning, authorised broadcasts and responsible participation.</p>
+        <p>It cannot be used to play poker or manage money. Venue-specific facts remain hidden until supplied and
+          verified by the lawful operator.</p><a class="text-link" href="pokerroom.html">Explore the physical pokerroom
+          →</a>
+      </div>
+    </section>
+    <section class="section verified-shell" data-verified-section="events" hidden>
+      <div class="section-head">
+        <p class="eyebrow">VERIFIED EVENTS</p>
+        <h2>Upcoming physical tournaments</h2>
+      </div>
+      <div data-event-grid></div>
+    </section>
+    <section class="section feature-band">
+      <div>
+        <p class="eyebrow">THE ROOM</p>
+        <h2>A city-floor pokerroom built around arrival, table etiquette and clear visitor information</h2>
+        <p>Visitor information focuses on check-in, table zones, floor communication, waiting areas and the difference
+          between an information request and a confirmed seat.</p><a class="button ghost" href="pokerroom.html">See the
+          room guide</a>
+      </div>
+      <picture>
+        <source media="(max-width: 700px)" srcset="assets/images/home-room-800.webp"><img class=""
+          src="assets/images/home-room-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+          alt="Physical poker tables inside a Canadian venue">
+      </picture>
+    </section>
+    <section class="section schedule-preview">
+      <div class="section-head">
+        <p class="eyebrow">PHYSICAL EVENT SCHEDULE</p>
+        <h2>Filter confirmed venue events</h2>
+        <p>The schedule stays empty until dates, format, location and terms are verified.</p>
+      </div>
+      <div class="filters" data-filters><button class="active" data-filter="all">All</button><button
+          data-filter="tournament">Tournament</button><button data-filter="cash">Table session</button><button
+          data-filter="broadcast">Broadcast</button></div>
+      <div class="empty-state" data-empty-events><strong>No verified event data is connected.</strong>
+        <p>Unconfirmed dates, prices, players and prize information are never displayed.</p>
+      </div>
+      <div class="event-grid" data-schedule-grid></div>
+    </section>
+    <section class="section live-feature">
+      <picture>
+        <source media="(max-width: 700px)" srcset="assets/images/home-live-800.webp"><img class=""
+          src="assets/images/home-live-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+          alt="Broadcast equipment beside a physical poker table">
+      </picture>
+      <div>
+        <p class="eyebrow">LIVE FROM THE VENUE</p>
+        <h2>Broadcast from the physical room</h2>
+        <p>Authorised coverage may show a real in-person tournament. The player cannot participate through a stream,
+          video player or browser interface.</p>
+        <div class="status-pill"><span></span> No verified broadcast currently connected</div><a class="text-link"
+          href="live.html">Read the broadcast policy →</a>
+      </div>
+    </section>
+    <section class="section ">
+      <div class="section-head">
+        <p class="eyebrow">VISITOR INFORMATION</p>
+        <h2>Before taking a seat</h2>
+        <p>Physical participation depends on verified venue rules and applicable provincial requirements.</p>
+      </div>
+      <div class="info-grid">
+        <article class="info-card"><span class="card-index">01</span>
+          <h3>Legal age</h3>
+          <p>The minimum age is determined by the province or territory and the venue licence.</p>
+        </article>
+        <article class="info-card"><span class="card-index">02</span>
+          <h3>Photo identification</h3>
+          <p>Bring valid government-issued photo identification.</p>
+        </article>
+        <article class="info-card"><span class="card-index">03</span>
+          <h3>Arrival window</h3>
+          <p>Use only the confirmed registration and arrival time shown for the event.</p>
+        </article>
+        <article class="info-card"><span class="card-index">04</span>
+          <h3>Seat confirmation</h3>
+          <p>A website request is not a final reservation until the venue confirms it.</p>
+        </article>
+        <article class="info-card"><span class="card-index">05</span>
+          <h3>Conduct</h3>
+          <p>Respect floor decisions, table etiquette, staff and other visitors.</p>
+        </article>
+        <article class="info-card"><span class="card-index">06</span>
+          <h3>Breaks and limits</h3>
+          <p>Set time and spending limits before attending and take regular breaks.</p>
+        </article>
+      </div>
+    </section>
+    <section class="section feature-band reverse">
+      <div>
+        <p class="eyebrow">DINING & LOUNGE</p>
+        <h2>Plan the pause around the tournament</h2>
+        <p>Verified opening hours, menu information, allergy guidance and non-alcoholic options can be connected once
+          supplied by the venue.</p><a class="button ghost" href="dining.html">Dining information</a>
+      </div>
+      <picture>
+        <source media="(max-width: 700px)" srcset="assets/images/home-dining-800.webp"><img class=""
+          src="assets/images/home-dining-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+          alt="Restaurant or lounge area near a physical pokerroom">
+      </picture>
+    </section>
+    <section class="section visit-feature">
+      <picture>
+        <source media="(max-width: 700px)" srcset="assets/images/home-visit-800.webp"><img class=""
+          src="assets/images/home-visit-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+          alt="Exterior and arrival route for a Canadian venue">
+      </picture>
+      <div>
+        <p class="eyebrow">ARRIVAL</p>
+        <h2>Route, parking and accessible access</h2>
+        <p>Address, transit, parking and mobility details remain hidden until verified. The Visit page is prepared for
+          lawful venue information without publishing guessed data.</p><a class="button primary" href="visit.html">Plan
+          the physical visit</a>
+      </div>
+    </section>
+    <section class="section gallery-section">
+      <div class="section-head">
+        <p class="eyebrow">PHYSICAL SPACES</p>
+        <h2>Different views of an in-person poker visit</h2>
+      </div>
+      <div class="masonry"><button type="button" data-gallery="assets/images/gallery-1-1600.webp"
+          aria-label="Open gallery image 1">
+          <picture>
+            <source media="(max-width: 700px)" srcset="assets/images/gallery-1-800.webp"><img class=""
+              src="assets/images/gallery-1-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+              alt="Physical venue space 1">
+          </picture>
+        </button><button type="button" data-gallery="assets/images/gallery-2-1600.webp"
+          aria-label="Open gallery image 2">
+          <picture>
+            <source media="(max-width: 700px)" srcset="assets/images/gallery-2-800.webp"><img class=""
+              src="assets/images/gallery-2-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+              alt="Physical venue space 2">
+          </picture>
+        </button><button type="button" data-gallery="assets/images/gallery-3-1600.webp"
+          aria-label="Open gallery image 3">
+          <picture>
+            <source media="(max-width: 700px)" srcset="assets/images/gallery-3-800.webp"><img class=""
+              src="assets/images/gallery-3-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+              alt="Physical venue space 3">
+          </picture>
+        </button><button type="button" data-gallery="assets/images/gallery-4-1600.webp"
+          aria-label="Open gallery image 4">
+          <picture>
+            <source media="(max-width: 700px)" srcset="assets/images/gallery-4-800.webp"><img class=""
+              src="assets/images/gallery-4-1600.webp" width="1600" height="1000" loading="lazy" decoding="async"
+              alt="Physical venue space 4">
+          </picture>
+        </button></div>
+    </section>
+    <div class="gallery-modal" data-gallery-modal hidden role="dialog" aria-modal="true"><button type="button"
+        data-gallery-close aria-label="Close">×</button><img src="" alt="Expanded venue image"></div>
+    <section class="section faq-block">
+      <div class="section-head">
+        <p class="eyebrow">QUESTIONS</p>
+        <h2>Clear answers before you travel</h2>
+      </div>
+      <div class="accordion">
+        <article><button type="button" aria-expanded="false"><span>Is this an online poker
+              website?</span><b>+</b></button>
+          <div hidden>
+            <p>No. This website covers physical pokerrooms and in-person tournaments only. It does not offer online
+              poker, gaming accounts, deposits, balances or remote play.</p>
+          </div>
+        </article>
+        <article><button type="button" aria-expanded="false"><span>How do I register for a physical
+              tournament?</span><b>+</b></button>
+          <div hidden>
+            <p>A request can be submitted only after a verified event and lawful venue process are connected. A request
+              is not final until the venue confirms it.</p>
+          </div>
+        </article>
+        <article><button type="button" aria-expanded="false"><span>Can I participate through a
+              broadcast?</span><b>+</b></button>
+          <div hidden>
+            <p>No. A broadcast can only show an authorised physical tournament. Viewers cannot join a table through the
+              video player.</p>
+          </div>
+        </article>
+        <article><button type="button" aria-expanded="false"><span>What identification should I
+              bring?</span><b>+</b></button>
+          <div hidden>
+            <p>Bring valid government-issued photo identification. The minimum legal age depends on the province or
+              territory and the venue licence.</p>
+          </div>
+        </article>
+        <article><button type="button" aria-expanded="false"><span>When should I arrive?</span><b>+</b></button>
+          <div hidden>
+            <p>Use the confirmed arrival time shown on the event page. Unverified timings are never displayed.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+    <section class="section responsible-callout">
+      <div class="section-head">
+        <p class="eyebrow">VISITOR INFORMATION</p>
+        <h2>Responsible participation</h2>
+        <p>Poker is paid entertainment, not a guaranteed source of income. Decide limits before arrival, avoid chasing
+          losses and pause when the experience stops feeling comfortable.</p>
+      </div>
+      <div class="info-grid">
+        <article class="info-card"><span class="card-index">01</span>
+          <h3>Set a time limit</h3>
+          <p>Choose a leaving time before entering the room.</p>
+        </article>
+        <article class="info-card"><span class="card-index">02</span>
+          <h3>Set a spending limit</h3>
+          <p>Use only money reserved for entertainment.</p>
+        </article>
+        <article class="info-card"><span class="card-index">03</span>
+          <h3>Take breaks</h3>
+          <p>Step away from the table and reassess regularly.</p>
+        </article>
+        <article class="info-card"><span class="card-index">04</span>
+          <h3>Seek support</h3>
+          <p>Provincial support services can provide confidential guidance.</p>
+        </article>
+      </div>
+    </section>
+    <section class="section newsletter">
+      <div>
+        <p class="eyebrow">UPDATES</p>
+        <h2>Receive verified schedule updates</h2>
+        <p>Newsletters may cover physical events, schedule changes and authorised venue broadcasts. No winning claims or
+          gaming offers.</p>
+      </div>
+      <form data-form="newsletter"><label>Email address<input type="email" name="email" required
+            autocomplete="email"></label><label class="check"><input type="checkbox" required> I agree to the privacy
+          notice.</label><button class="button primary" type="submit">Subscribe</button>
+        <p class="form-state" role="status"></p>
+      </form>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-brand"><img src="assets/logos/logo-dark.svg" alt="Jackpot City">
+      <p>Poker on the city floor. Independent guidance for physical pokerroom visits in Canada.</p>
     </div>
-    <div class="cookie">
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <p class="muted" style="margin:0">We use required cookies and optional analytics/marketing cookies only with
-                consent.</p>
-            <div><button class="btn alt" data-open-cookies>Settings</button> <button class="btn"
-                    data-cookie="all">Accept</button></div>
-        </div>
+    <div>
+      <h2>Plan</h2><a href="pokerroom.html">Pokerroom</a><a href="schedule.html">Schedule</a><a
+        href="visit.html">Visit</a><a href="dining.html">Dining</a>
     </div>
-    <div class="modal">
-        <div class="modal-box">
-            <h2>Cookie Settings</h2>
-            <p>Choose which cookie categories you allow. Required cookies remain active.</p>
-            <div class="toggle-row">
-                <div><strong>Required</strong><br><span class="muted">Operation and security</span></div><input
-                    type="checkbox" checked disabled>
-            </div>
-            <div class="toggle-row">
-                <div><strong>Analytics</strong><br><span class="muted">Website improvement</span></div><input
-                    type="checkbox">
-            </div>
-            <div class="toggle-row">
-                <div><strong>Marketing</strong><br><span class="muted">Only with consent</span></div><input
-                    type="checkbox">
-            </div>
-            <div class="modal-actions"><button class="btn alt" data-cookie="reject">Reject</button><button class="btn"
-                    data-cookie="saved">Save</button></div>
-        </div>
+    <div>
+      <h2>Information</h2><a href="rules.html">Rules</a><a href="faq.html">FAQ</a><a
+        href="responsible-gaming.html">Responsible play</a><a href="accessibility.html">Accessibility</a>
     </div>
-    <script src="assets/app.js"></script>
+    <div>
+      <h2>Legal</h2><a href="privacy.html">Privacy</a><a href="cookies.html">Cookies</a><a
+        href="terms.html">Terms</a><button class="footer-cookie-link" type="button" data-open-cookie>Privacy
+        choices</button>
+    </div>
+    <div class="footer-bottom">
+      <p>Provincial legal age and valid government-issued photo identification apply. Venue details remain hidden until
+        verified.</p>
+      <p>© <span data-year></span> Jackpot City visitor guide.</p>
+    </div>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="Back to top">↑</button>
 </body>
 
 </html>
